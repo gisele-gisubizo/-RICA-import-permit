@@ -43,7 +43,7 @@ function Form() {
             <h2 className="section-title">Business Owner Details</h2>
             <div className="input-grid">
               <div>
-                <label>Applicant citizenship *</label>
+                <label>Applicant citizenship <span className="required">*</span></label>
                 <select name="citizenship" defaultValue="" required>
                   <option value="" disabled>Select citizenship</option>
                   <option value="Rwandan">Rwandan</option>
@@ -62,7 +62,7 @@ function Form() {
             <div className="input-group">
               <label>Business Owner Address</label>
               <div>
-                <label>Province *</label>
+                <label>Province <span className="required">*</span></label>
                 <select name="province" defaultValue="" required>
                   <option value="" disabled>Select province</option>
                   <option value="Province A">Province A</option>
@@ -77,7 +77,7 @@ function Form() {
             <h2 className="section-title">Business Details</h2>
             <div className="input-grid">
               <div>
-                <label>Business type *</label>
+                <label>Business type <span className="required">*</span></label>
                 <select name="businessType" defaultValue="" required>
                   <option value="" disabled>Select business type</option>
                   <option value="Retailer">Retailer</option>
@@ -86,22 +86,22 @@ function Form() {
                 </select>
               </div>
               <div>
-                <label>Company name *</label>
+                <label>Company name <span className="required">*</span></label>
                 <input type="text" name="companyName" placeholder="Enter company name" required />
               </div>
               <div>
-                <label>TIN number *</label>
+                <label>TIN number <span className="required">*</span></label>
                 <input type="number" name="tinNumber" placeholder="Enter TIN number" required />
               </div>
               <div>
-                <label>Registration date *</label>
+                <label>Registration date <span className="required">*</span></label>
                 <input type="date" name="registrationDate" required />
               </div>
             </div>
             <div className="input-group">
               <label>Business Address</label>
               <div>
-                <label>Province *</label>
+                <label>Province <span className="required">*</span></label>
                 <select name="businessProvince" defaultValue="" required>
                   <option value="" disabled>Select province</option>
                   <option value="Province A">Province A</option>
@@ -116,7 +116,7 @@ function Form() {
             <h2 className="section-title">Product Information</h2>
             <div className="input-grid">
               <div>
-                <label>Purpose of importation *</label>
+                <label>Purpose of importation <span className="required">*</span></label>
                 <select name="purposeOfImportation" defaultValue="" required>
                   <option value="" disabled>Enter the purpose of importation</option>
                   <option value="Direct sale">Direct sale</option>
@@ -130,7 +130,7 @@ function Form() {
               <label>Product details</label>
               <div className="input-grid">
                 <div>
-                  <label>Product category *</label>
+                  <label>Product category <span className="required">*</span></label>
                   <select name="productCategory" defaultValue="" required>
                     <option value="" disabled>Select product category</option>
                     <option value="General purpose">General purpose</option>
@@ -139,7 +139,7 @@ function Form() {
                   </select>
                 </div>
                 <div>
-                  <label>Product name *</label>
+                  <label>Product name <span className="required">*</span></label>
                   <input type="text" name="productName" placeholder="Enter product name" required />
                 </div>
                 <div>
@@ -147,7 +147,7 @@ function Form() {
                   <input type="number" name="weight" placeholder="Weight kg" />
                 </div>
                 <div>
-                  <label>Unit of measurement *</label>
+                  <label>Unit of measurement <span className="required">*</span></label>
                   <select name="unitOfMeasurement" defaultValue="" required>
                     <option value="" disabled>Select unit of measurement</option>
                     <option value="Kgs">Kgs</option>
@@ -155,12 +155,12 @@ function Form() {
                   </select>
                 </div>
                 <div>
-                  <label>Quantity of product(s) *</label>
+                  <label>Quantity of product(s) <span className="required">*</span></label>
                   <input type="number" name="quantity" placeholder="Enter quantity of product" required />
                 </div>
               </div>
               <div>
-                <label>Description of products *</label>
+                <label>Description of products <span className="required">*</span></label>
                 <textarea name="descriptionOfProducts" placeholder="Enter product description" required></textarea>
               </div>
             </div>
