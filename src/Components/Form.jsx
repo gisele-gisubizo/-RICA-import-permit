@@ -1,15 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../Styles/form.css';
 
 function Form() {
+  const [citizenship, setCitizenship] = useState('');
+  const [purposeOfImportation, setPurposeOfImportation] = useState('');
+
   const handleSubmit = (event) => {
     event.preventDefault();
     const formData = {
       businessOwner: {
         citizenship: event.target.citizenship.value,
+        names: event.target.names.value,
+        otherNames: event.target.otherNames.value,
         phoneNumber: event.target.phoneNumber.value,
         emailAddress: event.target.emailAddress.value,
         province: event.target.province.value,
+        idNumber: citizenship === 'Rwandan' ? event.target.idNumber?.value : citizenship === 'Foreigner' ? event.target.passportNumber?.value : undefined,
       },
       business: {
         businessType: event.target.businessType.value,
@@ -20,6 +26,7 @@ function Form() {
       },
       product: {
         purposeOfImportation: event.target.purposeOfImportation.value,
+        specifiedPurpose: purposeOfImportation === 'Other' ? event.target.specifiedPurpose?.value : undefined,
         productCategory: event.target.productCategory.value,
         productName: event.target.productName.value,
         weight: event.target.weight.value,
@@ -44,11 +51,25 @@ function Form() {
             <div className="input-grid">
               <div>
                 <label>Applicant citizenship <span className="required">*</span></label>
-                <select name="citizenship" defaultValue="" required>
+                <select
+                  name="citizenship"
+                  value={citizenship}
+                  onChange={(e) => setCitizenship(e.target.value)}
+                  defaultValue=""
+                  required
+                >
                   <option value="" disabled>Select citizenship</option>
                   <option value="Rwandan">Rwandan</option>
                   <option value="Foreigner">Foreigner</option>
                 </select>
+              </div>
+              <div>
+                <label>Surname <span className="required">*</span></label>
+                <input type="text" name="names"  required />
+              </div>
+              <div>
+                <label>Other names</label>
+                <input type="text" name="otherNames" required />
               </div>
               <div>
                 <label>Phone number</label>
@@ -58,6 +79,28 @@ function Form() {
                 <label>Email address</label>
                 <input type="email" name="emailAddress" placeholder="Enter an email address" />
               </div>
+              {citizenship === 'Rwandan' && (
+                <div>
+                  <label>National ID number <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    name="idNumber"
+                    placeholder="Enter 16-digit National ID"
+                    required={citizenship === 'Rwandan'}
+                  />
+                </div>
+              )}
+              {citizenship === 'Foreigner' && (
+                <div>
+                  <label>Passport number <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    name="passportNumber"
+                    placeholder="Enter passport number"
+                    required={citizenship === 'Foreigner'}
+                  />
+                </div>
+              )}
             </div>
             <div className="input-group">
               <label>Business Owner Address</label>
@@ -117,7 +160,13 @@ function Form() {
             <div className="input-grid">
               <div>
                 <label>Purpose of importation <span className="required">*</span></label>
-                <select name="purposeOfImportation" defaultValue="" required>
+                <select
+                  name="purposeOfImportation"
+                  value={purposeOfImportation}
+                  onChange={(e) => setPurposeOfImportation(e.target.value)}
+                  defaultValue=""
+                  required
+                >
                   <option value="" disabled>Enter the purpose of importation</option>
                   <option value="Direct sale">Direct sale</option>
                   <option value="Personal use">Personal use</option>
@@ -126,6 +175,18 @@ function Form() {
                 </select>
               </div>
             </div>
+            {purposeOfImportation === 'Other' && (
+              <div className="input-group">
+                
+                <label>Specify purpose of importation <span className="required">*</span></label>
+                <input
+                  type="text"
+                  name="specifiedPurpose"
+                  placeholder="Enter specific purpose"
+                  required={purposeOfImportation === 'Other'}
+                />
+              </div>
+            )}
             <div className="input-group">
               <label>Product details</label>
               <div className="input-grid">
