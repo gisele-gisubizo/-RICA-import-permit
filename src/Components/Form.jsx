@@ -8,9 +8,9 @@ function Form() {
     idNumber: '',
     passportNumber: '',
     otherNames: '',
-    names: '',
+    surname: '',
     nationality: '',
-    phone: '',
+    phoneNumber: '',
     emailAddress: '',
     personalDistrict: '',
     businessType: '',
@@ -27,7 +27,7 @@ function Form() {
     unitOfMeasurement: '',
     quantity: ''
   });
-  const [errors, setErrors] = useState([]);
+  const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
   // Mapping of nationalities to international call codes
@@ -37,107 +37,73 @@ function Form() {
     Ugandan: '+256',
     Tanzanian: '+255',
     Burundian: '+257',
-    Other: '+1' // Generic placeholder for "Other"
+    Other: '+1'
   };
 
   // Update phone with call code when nationality changes
   useEffect(() => {
     if (formData.nationality && formData.nationality in countryCallCodes) {
+      const currentNumber = formData.phoneNumber.replace(/^\+\d+\s?/, '').trim();
       setFormData((prev) => ({
         ...prev,
-        phone: countryCallCodes[formData.nationality]
+        phoneNumber: `${countryCallCodes[formData.nationality]} ${currentNumber}`
       }));
     } else if (!formData.nationality) {
-      setFormData((prev) => ({ ...prev, phone: '' }));
+      setFormData((prev) => ({ ...prev, phoneNumber: '' }));
     }
   }, [formData.nationality]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors([]); // Clear errors on input change
+    if (name === 'phoneNumber') {
+      const currentCode = formData.phoneNumber.split(' ')[0] || countryCallCodes[formData.nationality] || '+250';
+      setFormData((prev) => ({
+        ...prev,
+        phoneNumber: `${currentCode} ${value}`
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+    // Clear error for the field being changed
+    setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const validateForm = () => {
-    const newErrors = [];
-    if (!formData.applicantCitizenship) {
-      newErrors.push('Applicant citizenship is required');
-    }
-    if (formData.applicantCitizenship === 'Rwandan' && formData.idNumber.length !== 16) {
-      newErrors.push('National ID number must be 16 digits');
-    }
-    if (formData.applicantCitizenship === 'Foreigner' && !formData.passportNumber) {
-      newErrors.push('Passport number is required for Foreigner');
-    }
-    if (formData.applicantCitizenship === 'Foreigner' && formData.nationality === 'Rwandan') {
-      newErrors.push('Nationality cannot be Rwandan for a Foreigner');
-    }
-    if (!formData.otherNames) {
-      newErrors.push('Other names are required');
-    }
-    if (!formData.names) {
-      newErrors.push('Surname is required');
-    }
-    if (!formData.nationality) {
-      newErrors.push('Nationality is required');
-    }
-    if (formData.emailAddress && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.emailAddress)) {
-      newErrors.push('Invalid email format');
-    }
-    if (!formData.personalDistrict) {
-      newErrors.push('Personal district is required');
-    }
-    if (!formData.businessType) {
-      newErrors.push('Business type is required');
-    }
-    if (!formData.companyName) {
-      newErrors.push('Company name is required');
-    }
-    if (formData.tinNumber.length !== 9) {
-      newErrors.push('TIN number must be 9 digits');
-    }
-    if (!formData.registrationDate) {
-      newErrors.push('Registration date is required');
-    }
+    const newErrors = {};
+    if (!formData.applicantCitizenship) newErrors.applicantCitizenship = 'This field is required';
+    if (formData.applicantCitizenship === 'Rwandan' && formData.idNumber.length !== 16) newErrors.idNumber = 'National ID number must be 16 digits';
+    if (formData.applicantCitizenship === 'Foreigner' && !formData.passportNumber) newErrors.passportNumber = 'This field is required';
+    if (formData.applicantCitizenship === 'Foreigner' && formData.nationality === 'Rwandan') newErrors.nationality = 'Nationality cannot be Rwandan for a Foreigner';
+    if (!formData.otherNames) newErrors.otherNames = 'This field is required';
+    if (!formData.surname) newErrors.surname = 'This field is required';
+    if (!formData.nationality) newErrors.nationality = 'This field is required';
+    if (formData.emailAddress && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.emailAddress)) newErrors.emailAddress = 'Invalid email format';
+    if (!formData.personalDistrict) newErrors.personalDistrict = 'This field is required';
+    if (!formData.businessType) newErrors.businessType = 'This field is required';
+    if (!formData.companyName) newErrors.companyName = 'This field is required';
+    if (!formData.tinNumber || formData.tinNumber.length !== 9) newErrors.tinNumber = 'Please provide a valid TIN number';
+    if (!formData.registrationDate) newErrors.registrationDate = 'This field is required';
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize to start of day
-    if (formData.registrationDate && new Date(formData.registrationDate) > today) {
-      newErrors.push('Registration date cannot be in the future');
-    }
-    if (!formData.businessDistrict) {
-      newErrors.push('Business district is required');
-    }
-    if (!formData.purposeOfImportation) {
-      newErrors.push('Purpose of importation is required');
-    }
-    if (formData.purposeOfImportation === 'Other' && !formData.specifiedPurpose) {
-      newErrors.push('Specify purpose is required when purpose is Other');
-    }
-    if (!formData.productCategory) {
-      newErrors.push('Product category is required');
-    }
-    if (!formData.productName) {
-      newErrors.push('Product name is required');
-    }
-    if (!formData.descriptionOfProducts) {
-      newErrors.push('Description of products is required');
-    }
-    if (!formData.unitOfMeasurement) {
-      newErrors.push('Unit of measurement is required');
-    }
-    if (!formData.quantity || parseInt(formData.quantity, 10) <= 0) {
-      newErrors.push('Quantity must be greater than 0');
-    }
+    today.setHours(0, 0, 0, 0);
+    if (formData.registrationDate && new Date(formData.registrationDate) > today) newErrors.registrationDate = 'Registration date cannot be in the future';
+    if (!formData.businessDistrict) newErrors.businessDistrict = 'This field is required';
+    if (!formData.purposeOfImportation) newErrors.purposeOfImportation = 'This field is required';
+    if (formData.purposeOfImportation === 'Other' && !formData.specifiedPurpose) newErrors.specifiedPurpose = 'This field is required';
+    if (!formData.productCategory) newErrors.productCategory = 'This field is required';
+    if (!formData.productName) newErrors.productName = 'This field is required';
+    if (!formData.descriptionOfProducts) newErrors.descriptionOfProducts = 'This field is required';
+    if (!formData.unitOfMeasurement) newErrors.unitOfMeasurement = 'This field is required';
+    if (!formData.quantity || parseInt(formData.quantity, 10) <= 0) newErrors.quantity = 'Please provide a number greater than zero';
     return newErrors;
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setErrors([]);
+    setErrors({});
     setIsLoading(true);
 
     const validationErrors = validateForm();
-    if (validationErrors.length > 0) {
+    if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       setIsLoading(false);
       return;
@@ -148,9 +114,9 @@ function Form() {
       ...(formData.applicantCitizenship === 'Rwandan' && { idNumber: formData.idNumber }),
       ...(formData.applicantCitizenship === 'Foreigner' && { passportNumber: formData.passportNumber }),
       otherNames: formData.otherNames,
-      names: formData.names,
+      names: formData.surname, // Map surname to backend 'names'
       nationality: formData.nationality,
-      phone: formData.phone,
+      phoneNumber: formData.phoneNumber,
       emailAddress: formData.emailAddress,
       personalDistrict: formData.personalDistrict,
       businessType: formData.businessType,
@@ -170,15 +136,15 @@ function Form() {
 
     try {
       await axios.post('http://localhost:5000/api/application', submitData);
-      setErrors(['Application submitted successfully!']);
+      setErrors({ submit: 'Application submitted successfully!' });
       setFormData({
         applicantCitizenship: '',
         idNumber: '',
         passportNumber: '',
         otherNames: '',
-        names: '',
+        surname: '',
         nationality: '',
-        phone: '',
+        phoneNumber: '',
         emailAddress: '',
         personalDistrict: '',
         businessType: '',
@@ -199,9 +165,9 @@ function Form() {
       setIsLoading(false);
       const errorMessages = error.response?.data?.error
         ? Array.isArray(error.response.data.error)
-          ? error.response.data.error
-          : [error.response.data.error]
-        : ['Failed to submit application. Please try again.'];
+          ? { submit: error.response.data.error.join(', ') }
+          : { submit: error.response.data.error }
+        : { submit: 'Failed to submit application. Please try again.' };
       setErrors(errorMessages);
     } finally {
       setIsLoading(false);
@@ -212,20 +178,11 @@ function Form() {
     <div className="app-container">
       <div className="form-container">
         <h1 className="form-title">RICA Import Permit Application</h1>
-        {errors.length > 0 && (
-          <div className="error-container">
-            {errors.map((error, index) => (
-              <p key={index} className={errors[0].includes('successfully') ? 'success-message' : 'error-message'}>
-                {error}
-              </p>
-            ))}
-          </div>
-        )}
         <form onSubmit={handleSubmit}>
           {/* Business Owner Details */}
           <div className="form-section">
             <h2 className="section-title">Business Owner Details</h2>
-            <div className="input-grid">
+            <div className="input-stack">
               <div className="input-group">
                 <label>Applicant citizenship <span className="required">*</span></label>
                 <select
@@ -238,16 +195,19 @@ function Form() {
                   <option value="Rwandan">Rwandan</option>
                   <option value="Foreigner">Foreigner</option>
                 </select>
+                {errors.applicantCitizenship && <p className="error-message">{errors.applicantCitizenship}</p>}
               </div>
               <div className="input-group">
                 <label>Surname <span className="required">*</span></label>
                 <input
                   type="text"
-                  name="names"
-                  value={formData.names}
+                  name="surname"
+                  value={formData.surname}
                   onChange={handleChange}
+                  placeholder="Enter surname"
                   required
                 />
+                {errors.surname && <p className="error-message">{errors.surname}</p>}
               </div>
               <div className="input-group">
                 <label>Other names <span className="required">*</span></label>
@@ -256,8 +216,10 @@ function Form() {
                   name="otherNames"
                   value={formData.otherNames}
                   onChange={handleChange}
+                  placeholder="Enter other names"
                   required
                 />
+                {errors.otherNames && <p className="error-message">{errors.otherNames}</p>}
               </div>
               <div className="input-group">
                 <label>Nationality <span className="required">*</span></label>
@@ -275,38 +237,53 @@ function Form() {
                   <option value="Burundian">Burundian</option>
                   <option value="Other">Other</option>
                 </select>
+                {errors.nationality && <p className="error-message">{errors.nationality}</p>}
               </div>
               <div className="input-group">
-                <label>Phone number</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="Enter phone number"
-                />
-              </div>
-              <div className="input-group">
-                <label>Email address</label>
-                <input
-                  type="email"
-                  name="emailAddress"
-                  value={formData.emailAddress}
-                  onChange={handleChange}
-                  placeholder="Enter an email address"
-                />
+                <label>Contact Information</label>
+                <div className="input-row">
+                  <div className="input-subgroup">
+                    <label>Phone number</label>
+                    <div className="phone-input-container">
+                      <span className="country-code-display">
+                        {formData.phoneNumber.split(' ')[0] || countryCallCodes[formData.nationality] || '+250'}
+                      </span>
+                      <input
+                        type="tel"
+                        name="phoneNumber"
+                        value={formData.phoneNumber.split(' ')[1] || ''}
+                        onChange={handleChange}
+                        placeholder="Enter phone number"
+                        className="phone-number-input"
+                      />
+                    </div>
+                    {errors.phoneNumber && <p className="error-message">{errors.phoneNumber}</p>}
+                  </div>
+                  <div className="input-subgroup">
+                    <label>Email address</label>
+                    <input
+                      type="email"
+                      name="emailAddress"
+                      value={formData.emailAddress}
+                      onChange={handleChange}
+                      placeholder="Enter email address"
+                    />
+                    {errors.emailAddress && <p className="error-message">{errors.emailAddress}</p>}
+                  </div>
+                </div>
               </div>
               {formData.applicantCitizenship === 'Rwandan' && (
                 <div className="input-group">
-                  <label>National ID number <span className="required">*</span></label>
+                  <label>Identification document number <span className="required">*</span></label>
                   <input
                     type="text"
                     name="idNumber"
                     value={formData.idNumber}
                     onChange={handleChange}
-                    placeholder="Enter 16-digit National ID"
+                    placeholder="Enter Identification document number"
                     required
                   />
+                  {errors.idNumber && <p className="error-message">{errors.idNumber}</p>}
                 </div>
               )}
               {formData.applicantCitizenship === 'Foreigner' && (
@@ -320,51 +297,53 @@ function Form() {
                     placeholder="Enter passport number"
                     required
                   />
+                  {errors.passportNumber && <p className="error-message">{errors.passportNumber}</p>}
                 </div>
               )}
-            </div>
-            <div className="input-group">
-              <label>Business Owner Address</label>
-              <div>
-                <label>District <span className="required">*</span></label>
-                <select
-                  name="personalDistrict"
-                  value={formData.personalDistrict}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="" disabled>Select district</option>
-                  <option value="Gasabo">Gasabo</option>
-                  <option value="Kicukiro">Kicukiro</option>
-                  <option value="Nyarugenge">Nyarugenge</option>
-                  <option value="Burera">Burera</option>
-                  <option value="Gakenke">Gakenke</option>
-                  <option value="Gicumbi">Gicumbi</option>
-                  <option value="Musanze">Musanze</option>
-                  <option value="Rulindo">Rulindo</option>
-                  <option value="Gisagara">Gisagara</option>
-                  <option value="Huye">Huye</option>
-                  <option value="Kamonyi">Kamonyi</option>
-                  <option value="Muhanga">Muhanga</option>
-                  <option value="Nyamagabe">Nyamagabe</option>
-                  <option value="Nyanza">Nyanza</option>
-                  <option value="Nyaruguru">Nyaruguru</option>
-                  <option value="Ruhango">Ruhango</option>
-                  <option value="Bugesera">Bugesera</option>
-                  <option value="Gatsibo">Gatsibo</option>
-                  <option value="Kayonza">Kayonza</option>
-                  <option value="Kirehe">Kirehe</option>
-                  <option value="Ngoma">Ngoma</option>
-                  <option value="Nyagatare">Nyagatare</option>
-                  <option value="Rwamagana">Rwamagana</option>
-                  <option value="Karongi">Karongi</option>
-                  <option value="Ngororero">Ngororero</option>
-                  <option value="Nyabihu">Nyabihu</option>
-                  <option value="Nyamasheke">Nyamasheke</option>
-                  <option value="Rubavu">Rubavu</option>
-                  <option value="Rusizi">Rusizi</option>
-                  <option value="Rutsiro">Rutsiro</option>
-                </select>
+              <div className="input-group">
+                <label>Business Owner Address</label>
+                <div className="input-subgroup">
+                  <label>District <span className="required">*</span></label>
+                  <select
+                    name="personalDistrict"
+                    value={formData.personalDistrict}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="" disabled>Enter district</option>
+                    <option value="Gasabo">Gasabo</option>
+                    <option value="Kicukiro">Kicukiro</option>
+                    <option value="Nyarugenge">Nyarugenge</option>
+                    <option value="Burera">Burera</option>
+                    <option value="Gakenke">Gakenke</option>
+                    <option value="Gicumbi">Gicumbi</option>
+                    <option value="Musanze">Musanze</option>
+                    <option value="Rulindo">Rulindo</option>
+                    <option value="Gisagara">Gisagara</option>
+                    <option value="Huye">Huye</option>
+                    <option value="Kamonyi">Kamonyi</option>
+                    <option value="Muhanga">Muhanga</option>
+                    <option value="Nyamagabe">Nyamagabe</option>
+                    <option value="Nyanza">Nyanza</option>
+                    <option value="Nyaruguru">Nyaruguru</option>
+                    <option value="Ruhango">Ruhango</option>
+                    <option value="Bugesera">Bugesera</option>
+                    <option value="Gatsibo">Gatsibo</option>
+                    <option value="Kayonza">Kayonza</option>
+                    <option value="Kirehe">Kirehe</option>
+                    <option value="Ngoma">Ngoma</option>
+                    <option value="Nyagatare">Nyagatare</option>
+                    <option value="Rwamagana">Rwamagana</option>
+                    <option value="Karongi">Karongi</option>
+                    <option value="Ngororero">Ngororero</option>
+                    <option value="Nyabihu">Nyabihu</option>
+                    <option value="Nyamasheke">Nyamasheke</option>
+                    <option value="Rubavu">Rubavu</option>
+                    <option value="Rusizi">Rusizi</option>
+                    <option value="Rutsiro">Rutsiro</option>
+                  </select>
+                  {errors.personalDistrict && <p className="error-message">{errors.personalDistrict}</p>}
+                </div>
               </div>
             </div>
           </div>
@@ -372,105 +351,115 @@ function Form() {
           {/* Business Details */}
           <div className="form-section">
             <h2 className="section-title">Business Details</h2>
-            <div className="input-grid">
-              <div className="input-group">
-                <label>Business type <span className="required">*</span></label>
-                <select
-                  name="businessType"
-                  value={formData.businessType}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="" disabled>Select business type</option>
-                  <option value="Retailer">Retailer</option>
-                  <option value="Wholesale">Wholesale</option>
-                  <option value="Manufacturer">Manufacturer</option>
-                </select>
+            <div className="input-stack">
+              <div className="input-row">
+                <div className="input-group">
+                  <label>Business type <span className="required">*</span></label>
+                  <select
+                    name="businessType"
+                    value={formData.businessType}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="" disabled>Enter Business Type</option>
+                    <option value="Retailer">Retailer</option>
+                    <option value="Wholesale">Wholesale</option>
+                    <option value="Manufacturer">Manufacturer</option>
+                  </select>
+                  {errors.businessType && <p className="error-message">{errors.businessType}</p>}
+                </div>
+                <div className="input-group">
+                  <label>Company name <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    placeholder="Enter company name"
+                    required
+                  />
+                  {errors.companyName && <p className="error-message">{errors.companyName}</p>}
+                </div>
+              </div>
+              <div className="input-row">
+                <div className="input-group">
+                  <label>TIN number <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    name="tinNumber"
+                    value={formData.tinNumber}
+                    onChange={handleChange}
+                    placeholder="Enter TIN number"
+                    required
+                  />
+                  {errors.tinNumber && <p className="error-message">{errors.tinNumber}</p>}
+                </div>
+                <div className="input-group">
+                  <label>Registration date <span className="required">*</span></label>
+                  <input
+                    type="date"
+                    name="registrationDate"
+                    value={formData.registrationDate}
+                    onChange={handleChange}
+                    max={new Date().toISOString().split('T')[0]}
+                    placeholder="Select date"
+                    required
+                  />
+                  {errors.registrationDate && <p className="error-message">{errors.registrationDate}</p>}
+                </div>
               </div>
               <div className="input-group">
-                <label>Company name <span className="required">*</span></label>
-                <input
-                  type="text"
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  placeholder="Enter company name"
-                  required
-                />
-              </div>
-              <div className="input-group">
-                <label>TIN number <span className="required">*</span></label>
-                <input
-                  type="text"
-                  name="tinNumber"
-                  value={formData.tinNumber}
-                  onChange={handleChange}
-                  placeholder="Enter 9-digit TIN number"
-                  required
-                />
-              </div>
-              <div className="input-group">
-                <label>Registration date <span className="required">*</span></label>
-                <input
-                  type="date"
-                  name="registrationDate"
-                  value={formData.registrationDate}
-                  onChange={handleChange}
-                  max={new Date().toISOString().split('T')[0]} // Prevent future dates
-                  required
-                />
-              </div>
-            </div>
-            <div className="input-group">
-              <label>Business Address</label>
-              <div>
-                <label>District <span className="required">*</span></label>
-                <select
-                  name="businessDistrict"
-                  value={formData.businessDistrict}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="" disabled>Select district</option>
-                  <option value="Gasabo">Gasabo</option>
-                  <option value="Kicukiro">Kicukiro</option>
-                  <option value="Nyarugenge">Nyarugenge</option>
-                  <option value="Burera">Burera</option>
-                  <option value="Gakenke">Gakenke</option>
-                  <option value="Gicumbi">Gicumbi</option>
-                  <option value="Musanze">Musanze</option>
-                  <option value="Rulindo">Rulindo</option>
-                  <option value="Gisagara">Gisagara</option>
-                  <option value="Huye">Huye</option>
-                  <option value="Kamonyi">Kamonyi</option>
-                  <option value="Muhanga">Muhanga</option>
-                  <option value="Nyamagabe">Nyamagabe</option>
-                  <option value="Nyanza">Nyanza</option>
-                  <option value="Nyaruguru">Nyaruguru</option>
-                  <option value="Ruhango">Ruhango</option>
-                  <option value="Bugesera">Bugesera</option>
-                  <option value="Gatsibo">Gatsibo</option>
-                  <option value="Kayonza">Kayonza</option>
-                  <option value="Kirehe">Kirehe</option>
-                  <option value="Ngoma">Ngoma</option>
-                  <option value="Nyagatare">Nyagatare</option>
-                  <option value="Rwamagana">Rwamagana</option>
-                  <option value="Karongi">Karongi</option>
-                  <option value="Ngororero">Ngororero</option>
-                  <option value="Nyabihu">Nyabihu</option>
-                  <option value="Nyamasheke">Nyamasheke</option>
-                  <option value="Rubavu">Rubavu</option>
-                  <option value="Rusizi">Rusizi</option>
-                  <option value="Rutsiro">Rutsiro</option>
-                </select>
+                <label>Business Address</label>
+                <div className="input-subgroup">
+                  <label>District <span className="required">*</span></label>
+                  <select
+                    name="businessDistrict"
+                    value={formData.businessDistrict}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="" disabled>Enter district</option>
+                    <option value="Gasabo">Gasabo</option>
+                    <option value="Kicukiro">Kicukiro</option>
+                    <option value="Nyarugenge">Nyarugenge</option>
+                    <option value="Burera">Burera</option>
+                    <option value="Gakenke">Gakenke</option>
+                    <option value="Gicumbi">Gicumbi</option>
+                    <option value="Musanze">Musanze</option>
+                    <option value="Rulindo">Rulindo</option>
+                    <option value="Gisagara">Gisagara</option>
+                    <option value="Huye">Huye</option>
+                    <option value="Kamonyi">Kamonyi</option>
+                    <option value="Muhanga">Muhanga</option>
+                    <option value="Nyamagabe">Nyamagabe</option>
+                    <option value="Nyanza">Nyanza</option>
+                    <option value="Nyaruguru">Nyaruguru</option>
+                    <option value="Ruhango">Ruhango</option>
+                    <option value="Bugesera">Bugesera</option>
+                    <option value="Gatsibo">Gatsibo</option>
+                    <option value="Kayonza">Kayonza</option>
+                    <option value="Kirehe">Kirehe</option>
+                    <option value="Ngoma">Ngoma</option>
+                    <option value="Nyagatare">Nyagatare</option>
+                    <option value="Rwamagana">Rwamagana</option>
+                    <option value="Karongi">Karongi</option>
+                    <option value="Ngororero">Ngororero</option>
+                    <option value="Nyabihu">Nyabihu</option>
+                    <option value="Nyamasheke">Nyamasheke</option>
+                    <option value="Rubavu">Rubavu</option>
+                    <option value="Rusizi">Rusizi</option>
+                    <option value="Rutsiro">Rutsiro</option>
+                  </select>
+                  {errors.businessDistrict && <p className="error-message">{errors.businessDistrict}</p>}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Product Information */}
           <div className="form-section">
-            <h2 className="section-title">Product Information</h2>
-            <div className="input-grid">
+            <h2 className="section-title">Importation details</h2>
+            <div className="input-stack">
               <div className="input-group">
                 <label>Purpose of importation <span className="required">*</span></label>
                 <select
@@ -479,88 +468,96 @@ function Form() {
                   onChange={handleChange}
                   required
                 >
-                  <option value="" disabled>Select purpose of importation</option>
+                  <option value="" disabled>Select the purpose of importation</option>
                   <option value="Direct sale">Direct sale</option>
                   <option value="Personal use">Personal use</option>
                   <option value="Trial use">Trial use</option>
                   <option value="Other">Other</option>
                 </select>
+                {errors.purposeOfImportation && <p className="error-message">{errors.purposeOfImportation}</p>}
               </div>
-            </div>
-            {formData.purposeOfImportation === 'Other' && (
-              <div className="input-group">
-                <label>Specify purpose of importation <span className="required">*</span></label>
-                <input
-                  type="text"
-                  name="specifiedPurpose"
-                  value={formData.specifiedPurpose}
-                  onChange={handleChange}
-                  placeholder="Enter specific purpose"
-                  required
-                />
-              </div>
-            )}
-            <div className="input-group">
-              <label>Product details</label>
-              <div className="input-grid">
+              {formData.purposeOfImportation === 'Other' && (
                 <div className="input-group">
-                  <label>Product category <span className="required">*</span></label>
-                  <select
-                    name="productCategory"
-                    value={formData.productCategory}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="" disabled>Select product category</option>
-                    <option value="General purpose">General purpose</option>
-                    <option value="Construction materials">Construction materials</option>
-                    <option value="Chemicals">Chemicals</option>
-                  </select>
-                </div>
-                <div className="input-group">
-                  <label>Product name <span className="required">*</span></label>
+                  <label>Specify purpose of importation <span className="required">*</span></label>
                   <input
                     type="text"
-                    name="productName"
-                    value={formData.productName}
+                    name="specifiedPurpose"
+                    value={formData.specifiedPurpose}
                     onChange={handleChange}
-                    placeholder="Enter product name"
+                    placeholder="Enter specific purpose"
                     required
                   />
+                  {errors.specifiedPurpose && <p className="error-message">{errors.specifiedPurpose}</p>}
                 </div>
-                <div className="input-group">
-                  <label>Weight (kg)</label>
-                  <input
-                    type="number"
-                    name="weight"
-                    value={formData.weight}
-                    onChange={handleChange}
-                    placeholder="Weight kg"
-                  />
-                </div>
-                <div className="input-group">
-                  <label>Unit of measurement <span className="required">*</span></label>
-                  <select
-                    name="unitOfMeasurement"
-                    value={formData.unitOfMeasurement}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="" disabled>Select unit of measurement</option>
-                    <option value="Kgs">Kgs</option>
-                    <option value="Tonnes">Tonnes</option>
-                  </select>
-                </div>
-                <div className="input-group">
-                  <label>Quantity of product(s) <span className="required">*</span></label>
-                  <input
-                    type="number"
-                    name="quantity"
-                    value={formData.quantity}
-                    onChange={handleChange}
-                    placeholder="Enter quantity"
-                    required
-                  />
+              )}
+              <div className="input-group">
+                <label>Product details</label>
+                <div className="input-stack">
+                  <div className="input-group">
+                    <label>Product category <span className="required">*</span></label>
+                    <select
+                      name="productCategory"
+                      value={formData.productCategory}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="" disabled>Select product category</option>
+                      <option value="General purpose">General purpose</option>
+                      <option value="Construction materials">Construction materials</option>
+                      <option value="Chemicals">Chemicals</option>
+                    </select>
+                    {errors.productCategory && <p className="error-message">{errors.productCategory}</p>}
+                  </div>
+                  <div className="input-group">
+                    <label>Product name <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      name="productName"
+                      value={formData.productName}
+                      onChange={handleChange}
+                      placeholder="Enter product name"
+                      required
+                    />
+                    {errors.productName && <p className="error-message">{errors.productName}</p>}
+                  </div>
+                  <div className="input-group">
+                    <label>Weight (kg)</label>
+                    <input
+                      type="number"
+                      name="weight"
+                      value={formData.weight}
+                      onChange={handleChange}
+                      placeholder="Enter weight"
+                    />
+                  </div>
+                  <div className="input-row">
+                    <div className="input-group">
+                      <label>Unit of measurement <span className="required">*</span></label>
+                      <select
+                        name="unitOfMeasurement"
+                        value={formData.unitOfMeasurement}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="" disabled>Enter unit of measurement</option>
+                        <option value="Kgs">Kgs</option>
+                        <option value="Tonnes">Tonnes</option>
+                      </select>
+                      {errors.unitOfMeasurement && <p className="error-message">{errors.unitOfMeasurement}</p>}
+                    </div>
+                    <div className="input-group">
+                      <label>Quantity of product(s) <span className="required">*</span></label>
+                      <input
+                        type="number"
+                        name="quantity"
+                        value={formData.quantity}
+                        onChange={handleChange}
+                        placeholder="Enter quantity"
+                        required
+                      />
+                      {errors.quantity && <p className="error-message">{errors.quantity}</p>}
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="input-group">
@@ -572,10 +569,16 @@ function Form() {
                   placeholder="Enter product description"
                   required
                 ></textarea>
+                {errors.descriptionOfProducts && <p className="error-message">{errors.descriptionOfProducts}</p>}
               </div>
             </div>
           </div>
 
+          {errors.submit && (
+            <p className={errors.submit === 'Application submitted successfully!' ? 'success-message' : 'error-message'}>
+              {errors.submit}
+            </p>
+          )}
           <button type="submit" className="submit-button" disabled={isLoading}>
             {isLoading ? 'Submitting...' : 'Submit'}
           </button>
